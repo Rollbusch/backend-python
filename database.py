@@ -19,9 +19,6 @@ class DatabaseConnection():
         except Error as e:
             print("Error while connecting to MySQL", e)
 
-    def config_connection(self):
-        self.connection.execute('set max_allowed_packet=67108864')
-
     def close_connection(self):
         if self.connection.is_connected():
             self.connection.close()
@@ -29,39 +26,40 @@ class DatabaseConnection():
         else: 
             print("MySQL connection is already closed")
     
-    def reconnect(self):
-        print('#' * 20)
-        print(self.connection.is_connected)
-        if (not self.connection.is_connected):
-            return self.connection.reconnect()
-            
     def selectAll(self): 
-        self.reconnect()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute('SELECT id_pessoa, nome, data_admissao FROM pessoas')
         return cursor.fetchall()
    
     def select(self, id): 
-        self.reconnect()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(f'SELECT * FROM pessoas WHERE id_pessoa = {id}')
         return cursor.fetchall()
     
-    def update(self, id, values):
-        self.reconnect()
+    def update(self, id, nome, rg, cpf, data_nascimento, data_admissao):
         cursor = self.connection.cursor()
-        print(f"""UPDATE `pessoas` SET {values} WHERE `pessoas`.`id_pessoa`='{id}'""")
-        cursor.execute(f"""UPDATE `pessoas` SET {values} WHERE `pessoas`.`id_pessoa` = {id}""")
+        cursor.execute(f"""UPDATE `pessoas` 
+                       SET `id_pessoa`={id}, 
+                            `nome`='{nome}', 
+                            `rg`='{rg}', 
+                            `cpf`='{cpf}', 
+                            `data_nascimento`='{data_nascimento}', 
+                            `data_admissao`='{data_admissao}'
+                       WHERE `pessoas`.`id_pessoa` = {id}""")
         return self.connection.commit()
     
-    def create(self, values):
-        self.reconnect()
+    def create(self, nome, rg, cpf, data_nascimento, data_admissao):
         cursor = self.connection.cursor()
-        cursor.execute(f'INSERT INTO pessoas (nome, rg, cpf, data_nascimento, data_admissao, funcao) VALUES ({values})')
+        cursor.execute(f"""INSERT INTO pessoas (nome, rg, cpf, data_nascimento, data_admissao) 
+                       VALUES ('{nome}', 
+                                '{rg}', 
+                                '{cpf}', 
+                                '{data_nascimento}', 
+                                '{data_admissao}')
+                        """)
         return self.connection.commit()
     
     def delete(self, id):
-        self.reconnect()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(f'DELETE FROM pessoas WHERE id_pessoa = {id}')
         return self.connection.commit()
